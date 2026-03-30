@@ -9,10 +9,18 @@ from app.flashcards.schemas import CreateCardRequest, UpdateCardRequest, ImportC
 
 
 def find_all_by_user(db: Session, user_id: int, page: int, page_size: int) -> tuple[list[models.Flashcard], int]:
-    query = (
-        db.query(models.Flashcard)
+    from sqlalchemy import func
+    # Subquery: pick the smallest id per unique (front, back) pair
+    unique_ids_sq = (
+        db.query(func.min(models.Flashcard.id).label("id"))
         .join(models.FlashcardSet, models.Flashcard.set_id == models.FlashcardSet.id)
         .filter(models.FlashcardSet.user_id == user_id)
+        .group_by(models.Flashcard.front, models.Flashcard.back)
+        .subquery()
+    )
+    query = (
+        db.query(models.Flashcard)
+        .join(unique_ids_sq, models.Flashcard.id == unique_ids_sq.c.id)
         .order_by(models.Flashcard.id.desc())
     )
     total = query.count()
