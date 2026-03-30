@@ -21,6 +21,11 @@ export function SetListPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sets'] }),
   })
 
+  const renameMutation = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => setsApi.update(id, { name }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sets'] }),
+  })
+
   if (isLoading) return <div className="flex justify-center py-16"><Spinner size="lg" /></div>
   if (error) return <p className="text-red-600">Failed to load decks.</p>
 
@@ -45,6 +50,7 @@ export function SetListPage() {
               key={set.id}
               set={set}
               onDelete={() => deleteMutation.mutate(set.id)}
+              onRename={(name) => renameMutation.mutate({ id: set.id, name })}
             />
           ))}
         </div>
@@ -57,7 +63,18 @@ export function SetListPage() {
   )
 }
 
-function SetCard({ set, onDelete }: { set: FlashcardSet; onDelete: () => void }) {
+function SetCard({ set, onDelete, onRename }: { set: FlashcardSet; onDelete: () => void; onRename: (name: string) => void }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState(set.name)
+
+  function handleSave() {
+    const trimmed = editName.trim()
+    if (trimmed && trimmed !== set.name) {
+      onRename(trimmed)
+    }
+    setIsEditing(false)
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
@@ -73,11 +90,34 @@ function SetCard({ set, onDelete }: { set: FlashcardSet; onDelete: () => void })
         </button>
       </div>
 
-      <Link to={`/sets/${set.id}`}>
-        <h3 className="font-semibold text-gray-900 hover:text-primary-600 transition-colors mb-2">
-          {set.name}
-        </h3>
-      </Link>
+      {isEditing ? (
+        <div className="flex items-center gap-2 mb-2">
+          <input
+            autoFocus
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setIsEditing(false) }}
+            className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <button onClick={handleSave} className="text-green-600 hover:text-green-700 text-sm font-medium">Save</button>
+          <button onClick={() => { setEditName(set.name); setIsEditing(false) }} className="text-gray-400 hover:text-gray-600 text-sm">Cancel</button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 mb-2">
+          <Link to={`/sets/${set.id}`} className="flex-1 min-w-0">
+            <h3 className="font-semibold text-gray-900 hover:text-primary-600 transition-colors truncate">
+              {set.name}
+            </h3>
+          </Link>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="text-gray-300 hover:text-primary-500 transition-colors text-sm shrink-0"
+            title="Edit name"
+          >
+            Edit
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between text-xs text-gray-500">
         <span>{set.cardCount} cards</span>
