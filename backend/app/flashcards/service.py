@@ -8,6 +8,18 @@ from app.flashcard_sets.service import find_one_or_fail as find_set_or_fail, inc
 from app.flashcards.schemas import CreateCardRequest, UpdateCardRequest, ImportCardsRequest
 
 
+def find_all_by_user(db: Session, user_id: int, page: int, page_size: int) -> tuple[list[models.Flashcard], int]:
+    query = (
+        db.query(models.Flashcard)
+        .join(models.FlashcardSet, models.Flashcard.set_id == models.FlashcardSet.id)
+        .filter(models.FlashcardSet.user_id == user_id)
+        .order_by(models.Flashcard.id.desc())
+    )
+    total = query.count()
+    cards = query.offset((page - 1) * page_size).limit(page_size).all()
+    return cards, total
+
+
 def find_by_set(db: Session, set_id: int, user_id: int) -> list[models.Flashcard]:
     find_set_or_fail(db, set_id, user_id)  # ownership check
     return (

@@ -4,6 +4,7 @@ import { ProtectedLayout } from './features/auth/ProtectedLayout'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
 import { SetListPage } from './features/cards/SetListPage'
+import { AllCardsPage } from './features/cards/AllCardsPage'
 import { SetDetailPage } from './features/cards/SetDetailPage'
 import { SessionSetupPage } from './features/learning/SessionSetupPage'
 import { SessionPlayPage } from './features/learning/SessionPlayPage'
@@ -24,6 +25,7 @@ export default function App() {
         <Route index element={<Navigate to="/sets" replace />} />
         <Route path="/sets" element={<SetListPage />} />
         <Route path="/sets/:id" element={<SetDetailPage />} />
+        <Route path="/cards" element={<AllCardsPage />} />
         <Route path="/learn/setup" element={<SessionSetupPage />} />
         <Route path="/learn/session/:id" element={<SessionPlayPage />} />
         <Route path="/learn/session/:id/done" element={<SessionCompletePage />} />

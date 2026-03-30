@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from pydantic import field_validator
 
-from app.base_schema import CamelModel
+from app.base_schema import CamelModel, Pagination
 
 
 class CreateCardRequest(CamelModel):
@@ -45,3 +45,8 @@ class FlashcardOut(CamelModel):
     repetitions: int
     next_review_at: datetime | None  # → "nextReviewAt"
     created_at: datetime             # → "createdAt"
+
+
+class PaginatedCardsResponse(CamelModel):
+    data: list[FlashcardOut]
+    pagination: Pagination

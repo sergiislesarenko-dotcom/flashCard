@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
 
 from app.base_schema import CamelModel
 
@@ -39,6 +39,11 @@ class UserResponse(CamelModel):
 class TokenResponse(CamelModel):
     access_token: str   # → serialised as "accessToken"
     user: UserResponse
+
+
+class OAuth2TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
 class RefreshTokenResponse(CamelModel):

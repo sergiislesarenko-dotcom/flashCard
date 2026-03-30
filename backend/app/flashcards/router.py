@@ -9,10 +9,25 @@ from app.flashcards.schemas import (
     CreateCardRequest,
     FlashcardOut,
     ImportCardsRequest,
+    PaginatedCardsResponse,
     UpdateCardRequest,
 )
 
 router = APIRouter()
+
+
+@router.get("/all", response_model=PaginatedCardsResponse)
+def list_all_cards(
+    page: int = 1,
+    page_size: int = 25,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    cards, total = service.find_all_by_user(db, current_user.id, page, page_size)
+    return {
+        "data": cards,
+        "pagination": {"page": page, "page_size": page_size, "total": total},
+    }
 
 
 @router.get("", response_model=list[FlashcardOut])

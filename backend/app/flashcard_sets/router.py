@@ -6,6 +6,7 @@ from app.dependencies import get_current_user
 from app import models
 from app.flashcard_sets import service
 from app.flashcard_sets.schemas import (
+    CreateSetFromCardsRequest,
     CreateSetRequest,
     FlashcardSetOut,
     PaginatedSetsResponse,
@@ -34,6 +35,15 @@ def get_set(
     db: Session = Depends(get_db),
 ):
     return service.find_one_or_fail(db, set_id, current_user.id)
+
+
+@router.post("/from-cards", response_model=FlashcardSetOut, status_code=status.HTTP_201_CREATED)
+def create_set_from_cards(
+    body: CreateSetFromCardsRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return service.create_from_cards(db, current_user.id, body)
 
 
 @router.post("", response_model=FlashcardSetOut, status_code=status.HTTP_201_CREATED)

@@ -23,6 +23,27 @@ class UpdateSetRequest(CamelModel):
     description: str | None = None
 
 
+class CreateSetFromCardsRequest(CamelModel):
+    name: str
+    language_id: int
+    description: str | None = None
+    card_ids: list[int]
+
+    @field_validator("name")
+    @classmethod
+    def name_not_empty_from_cards(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Name cannot be empty")
+        return v.strip()
+
+    @field_validator("card_ids")
+    @classmethod
+    def card_ids_not_empty(cls, v: list[int]) -> list[int]:
+        if not v:
+            raise ValueError("At least one card must be selected")
+        return v
+
+
 class FlashcardSetOut(CamelModel):
     id: int
     name: str

@@ -23,6 +23,9 @@ export interface ImportResult {
 }
 
 export const cardsApi = {
+  getAll: (page = 1, pageSize = 25) =>
+    apiClient<PaginatedResponse<Flashcard>>('GET', `/cards/all?page=${page}&pageSize=${pageSize}`),
+
   getBySet: (setId: number, page = 1, pageSize = 50) =>
     apiClient<PaginatedResponse<Flashcard>>('GET', `/cards?setId=${setId}&page=${page}&pageSize=${pageSize}`),
 

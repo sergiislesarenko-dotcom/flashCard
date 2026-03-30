@@ -22,6 +22,9 @@ export function NavBar() {
           <Link to="/sets" className="text-sm text-gray-600 hover:text-gray-900">
             My Decks
           </Link>
+          <Link to="/cards" className="text-sm text-gray-600 hover:text-gray-900">
+            Cards List
+          </Link>
           <Link to="/stats" className="text-sm text-gray-600 hover:text-gray-900">
             Stats
           </Link>
