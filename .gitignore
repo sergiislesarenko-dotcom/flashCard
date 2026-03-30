@@ -1,0 +1,39 @@
+# ── Dependencies ────────────────────────────────────────────
+node_modules/
+
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# ── Build / dist ────────────────────────────────────────────
+dist/
+build/
+frontend/.vite/
+*.tsbuildinfo
+
+# ── Test artefacts ──────────────────────────────────────────
+test.db
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Environment & secrets ───────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Logs ────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+
+# ── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Misc ────────────────────────────────────────────────────
+.claude
+start.bat
+CLAUDE.md
