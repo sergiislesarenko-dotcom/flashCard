@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -9,6 +9,7 @@ from app.flashcards.schemas import (
     CreateCardRequest,
     FlashcardOut,
     ImportCardsRequest,
+    ImportFileResponse,
     PaginatedCardsResponse,
     UpdateCardRequest,
 )
@@ -46,6 +47,18 @@ def create_card(
     db: Session = Depends(get_db),
 ):
     return service.create(db, current_user.id, body)
+
+
+@router.post("/import-file", response_model=ImportFileResponse, status_code=status.HTTP_201_CREATED)
+async def import_file(
+    file: UploadFile = File(...),
+    set_id: int | None = Form(None),
+    set_name: str | None = Form(None),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    contents = await file.read()
+    return service.import_from_excel(db, current_user.id, contents, file.filename or "", set_id, set_name)
 
 
 @router.post("/import", response_model=list[FlashcardOut], status_code=status.HTTP_201_CREATED)

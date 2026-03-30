@@ -50,3 +50,9 @@ class FlashcardOut(CamelModel):
 class PaginatedCardsResponse(CamelModel):
     data: list[FlashcardOut]
     pagination: Pagination
+
+
+class ImportFileResponse(CamelModel):
+    imported: int
+    skipped: int
+    set_id: int

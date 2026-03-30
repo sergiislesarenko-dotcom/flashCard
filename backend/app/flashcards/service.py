@@ -107,6 +107,87 @@ def bulk_import(db: Session, user_id: int, dto: ImportCardsRequest) -> list[mode
     return cards
 
 
+def import_from_excel(db: Session, user_id: int, file_bytes: bytes, filename: str,
+                      set_id: int | None, set_name: str | None) -> dict:
+    from app.flashcard_sets.service import create as create_set, find_one_or_fail as set_find
+    from app.flashcard_sets.schemas import CreateSetRequest
+    import io
+
+    # Parse Excel file
+    rows: list[tuple[str, str]] = []
+    lower_name = filename.lower()
+
+    if lower_name.endswith(".xlsx"):
+        import openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True)
+        ws = wb.active
+        header = [str(cell.value or "").strip().lower() for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+        if "russian" not in header or "english" not in header:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="File must have 'english' and 'russian' columns")
+        ru_idx = header.index("russian")
+        en_idx = header.index("english")
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            vals = list(row)
+            ru = str(vals[ru_idx] or "").strip() if ru_idx < len(vals) else ""
+            en = str(vals[en_idx] or "").strip() if en_idx < len(vals) else ""
+            if ru and en:
+                rows.append((ru, en))
+        wb.close()
+
+    elif lower_name.endswith(".xls"):
+        import xlrd
+        book = xlrd.open_workbook(file_contents=file_bytes)
+        sheet = book.sheet_by_index(0)
+        header = [str(sheet.cell_value(0, c)).strip().lower() for c in range(sheet.ncols)]
+        if "russian" not in header or "english" not in header:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="File must have 'english' and 'russian' columns")
+        ru_idx = header.index("russian")
+        en_idx = header.index("english")
+        for r in range(1, sheet.nrows):
+            ru = str(sheet.cell_value(r, ru_idx)).strip()
+            en = str(sheet.cell_value(r, en_idx)).strip()
+            if ru and en:
+                rows.append((ru, en))
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Unsupported file format. Use .xls or .xlsx")
+
+    if not rows:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No valid rows found in file")
+
+    # Resolve or create set
+    if set_id:
+        set_find(db, set_id, user_id)
+        target_set_id = set_id
+    elif set_name:
+        language = db.query(models.Language).filter(models.Language.code == "en").first()
+        if not language:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="English language not found in database")
+        new_set = create_set(db, user_id, CreateSetRequest(
+            name=set_name, language_id=language.id,
+        ))
+        target_set_id = new_set.id
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Provide set_id or set_name")
+
+    # Create cards
+    now = datetime.utcnow()
+    cards = [
+        models.Flashcard(set_id=target_set_id, front=ru, back=en, next_review_at=now)
+        for ru, en in rows
+    ]
+    db.add_all(cards)
+    db.flush()
+    increment_card_count(db, target_set_id, len(cards))
+    db.commit()
+
+    return {"imported": len(cards), "skipped": 0, "set_id": target_set_id}
+
+
 def find_due_cards(db: Session, set_id: int, limit: int) -> list[models.Flashcard]:
     now = datetime.utcnow()
     return (

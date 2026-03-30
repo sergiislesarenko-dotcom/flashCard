@@ -25,6 +25,9 @@ export function NavBar() {
           <Link to="/cards" className="text-sm text-gray-600 hover:text-gray-900">
             Cards List
           </Link>
+          <Link to="/import" className="text-sm text-gray-600 hover:text-gray-900">
+            Import
+          </Link>
           <Link to="/stats" className="text-sm text-gray-600 hover:text-gray-900">
             Stats
           </Link>
