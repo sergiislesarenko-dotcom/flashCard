@@ -36,6 +36,12 @@ export interface Flashcard {
   nextReviewAt: string | null
 }
 
+export interface CardExample {
+  id: number
+  cardId: number
+  text: string
+}
+
 export interface SessionCard {
   id: number
   front: string

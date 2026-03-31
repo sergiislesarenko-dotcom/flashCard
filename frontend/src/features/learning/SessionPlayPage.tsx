@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { learningApi } from '../../api/learning.api'
+import { cardsApi } from '../../api/cards.api'
 import { useSessionStore } from '../../store/session.store'
 import { FlashCard } from './components/FlashCard'
 import { ProgressBar } from '../../components/ProgressBar'
@@ -14,6 +15,7 @@ export function SessionPlayPage() {
   const navigate = useNavigate()
   const [isFlipped, setIsFlipped] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
+  const [showExamples, setShowExamples] = useState(false)
 
   const { cards, currentIndex, actions } = useSessionStore((s) => ({
     cards: s.cards,
@@ -32,6 +34,7 @@ export function SessionPlayPage() {
     } else {
       actions.advance()
       setIsFlipped(false)
+      setShowExamples(false)
     }
   }
 
@@ -54,6 +57,7 @@ export function SessionPlayPage() {
       } else {
         actions.advance()
         setIsFlipped(false)
+        setShowExamples(false)
       }
     },
   })
@@ -81,6 +85,13 @@ export function SessionPlayPage() {
   }
 
   const currentCard = cards[currentIndex]
+
+  const examplesQuery = useQuery({
+    queryKey: ['card-examples', currentCard?.id],
+    queryFn: () => cardsApi.getExamples(currentCard!.id),
+    enabled: showExamples && !!currentCard,
+  })
+
   if (!currentCard) {
     return <div className="flex justify-center py-16"><Spinner size="lg" /></div>
   }
@@ -106,6 +117,32 @@ export function SessionPlayPage() {
           onFlip={() => setIsFlipped((f) => !f)}
         />
       </div>
+
+      {/* Examples toggle */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => setShowExamples((v) => !v)}
+          className="text-sm text-primary-600 hover:text-primary-700 underline"
+        >
+          {showExamples ? 'Hide examples' : 'Examples'}
+        </button>
+      </div>
+
+      {showExamples && (
+        <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm">
+          {examplesQuery.isLoading && <p className="text-gray-400">Loading...</p>}
+          {examplesQuery.data && examplesQuery.data.length === 0 && (
+            <p className="text-gray-400">No examples for this card</p>
+          )}
+          {examplesQuery.data && examplesQuery.data.length > 0 && (
+            <ul className="space-y-2">
+              {examplesQuery.data.map((ex) => (
+                <li key={ex.id} className="text-gray-700">{ex.text}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {/* Actions — only visible after flip */}
       {isFlipped ? (
@@ -135,7 +172,7 @@ export function SessionPlayPage() {
             variant="secondary"
             className="flex-1"
             disabled={currentIndex === 0}
-            onClick={() => { actions.goBack(); setIsFlipped(false) }}
+            onClick={() => { actions.goBack(); setIsFlipped(false); setShowExamples(false) }}
           >
             ← Back
           </Button>

@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Flashcard, PaginatedResponse } from './types'
+import type { CardExample, Flashcard, PaginatedResponse } from './types'
 
 export interface CreateCardDto {
   setId: number
@@ -44,29 +44,22 @@ export const cardsApi = {
   delete: (id: number) =>
     apiClient('DELETE', `/cards/${id}`),
 
+  getExamples: (cardId: number) =>
+    apiClient<CardExample[]>('GET', `/cards/${cardId}/examples`),
+
   import: (dto: ImportCardsDto) =>
     apiClient<ImportResult>('POST', '/cards/import', dto),
 
   importFile: async (file: File, setId?: number, setName?: string): Promise<ImportFileResult> => {
-    const { useAuthStore } = await import('../store/auth.store')
-    const BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
-    const token = useAuthStore.getState().accessToken
-
-    const formData = new FormData()
-    formData.append('file', file)
-    if (setId) formData.append('set_id', String(setId))
-    if (setName) formData.append('set_name', setName)
-
-    const res = await fetch(`${BASE_URL}/cards/import-file`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      credentials: 'include',
-      body: formData,
+    const buffer = await file.arrayBuffer()
+    const base64 = btoa(
+      new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''),
+    )
+    return apiClient<ImportFileResult>('POST', '/cards/import-base64', {
+      fileData: base64,
+      fileName: file.name,
+      setId: setId ?? null,
+      setName: setName ?? null,
     })
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.detail || 'Import failed')
-    }
-    return res.json()
   },
 }

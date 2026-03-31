@@ -102,6 +102,18 @@ class Flashcard(Base):
 
     set = relationship("FlashcardSet", back_populates="cards")
     reviews = relationship("ReviewResult", back_populates="card", cascade="all, delete-orphan")
+    examples = relationship("CardExample", back_populates="card", cascade="all, delete-orphan")
+
+
+class CardExample(Base):
+    __tablename__ = "card_examples"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    card_id = Column(Integer, ForeignKey("flashcards.id", ondelete="CASCADE"), nullable=False)
+    text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    card = relationship("Flashcard", back_populates="examples")
 
 
 class LearningSession(Base):

@@ -56,3 +56,16 @@ class ImportFileResponse(CamelModel):
     imported: int
     skipped: int
     set_id: int
+
+
+class CardExampleOut(CamelModel):
+    id: int
+    card_id: int
+    text: str
+
+
+class ImportFileBase64Request(CamelModel):
+    file_data: str  # base64-encoded file content
+    file_name: str
+    set_id: int | None = None
+    set_name: str | None = None

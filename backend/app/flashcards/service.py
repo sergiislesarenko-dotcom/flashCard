@@ -114,7 +114,8 @@ def import_from_excel(db: Session, user_id: int, file_bytes: bytes, filename: st
     import io
 
     # Parse Excel file
-    rows: list[tuple[str, str]] = []
+    # Each row: (russian, english, examples_raw_or_empty)
+    rows: list[tuple[str, str, str]] = []
     lower_name = filename.lower()
 
     if lower_name.endswith(".xlsx"):
@@ -127,12 +128,14 @@ def import_from_excel(db: Session, user_id: int, file_bytes: bytes, filename: st
                                 detail="File must have 'english' and 'russian' columns")
         ru_idx = header.index("russian")
         en_idx = header.index("english")
+        ex_idx = header.index("examples") if "examples" in header else None
         for row in ws.iter_rows(min_row=2, values_only=True):
             vals = list(row)
             ru = str(vals[ru_idx] or "").strip() if ru_idx < len(vals) else ""
             en = str(vals[en_idx] or "").strip() if en_idx < len(vals) else ""
+            ex = str(vals[ex_idx] or "").strip() if ex_idx is not None and ex_idx < len(vals) else ""
             if ru and en:
-                rows.append((ru, en))
+                rows.append((ru, en, ex))
         wb.close()
 
     elif lower_name.endswith(".xls"):
@@ -145,11 +148,13 @@ def import_from_excel(db: Session, user_id: int, file_bytes: bytes, filename: st
                                 detail="File must have 'english' and 'russian' columns")
         ru_idx = header.index("russian")
         en_idx = header.index("english")
+        ex_idx = header.index("examples") if "examples" in header else None
         for r in range(1, sheet.nrows):
             ru = str(sheet.cell_value(r, ru_idx)).strip()
             en = str(sheet.cell_value(r, en_idx)).strip()
+            ex = str(sheet.cell_value(r, ex_idx)).strip() if ex_idx is not None else ""
             if ru and en:
-                rows.append((ru, en))
+                rows.append((ru, en, ex))
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Unsupported file format. Use .xls or .xlsx")
@@ -174,14 +179,22 @@ def import_from_excel(db: Session, user_id: int, file_bytes: bytes, filename: st
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Provide set_id or set_name")
 
-    # Create cards
+    # Create cards and examples
     now = datetime.utcnow()
-    cards = [
-        models.Flashcard(set_id=target_set_id, front=ru, back=en, next_review_at=now)
-        for ru, en in rows
-    ]
-    db.add_all(cards)
-    db.flush()
+    cards = []
+    examples = []
+    for ru, en, ex_raw in rows:
+        card = models.Flashcard(set_id=target_set_id, front=ru, back=en, next_review_at=now)
+        cards.append(card)
+        db.add(card)
+        db.flush()  # get card.id
+        if ex_raw:
+            for text in ex_raw.split(";"):
+                text = text.strip()
+                if text:
+                    examples.append(models.CardExample(card_id=card.id, text=text, created_at=now))
+    if examples:
+        db.add_all(examples)
     increment_card_count(db, target_set_id, len(cards))
     db.commit()
 
