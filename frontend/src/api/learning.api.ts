@@ -8,7 +8,7 @@ import type {
 
 export interface CreateSessionDto {
   setId: number
-  cardCount: number
+  cardCount?: number
 }
 
 export interface SubmitReviewDto {

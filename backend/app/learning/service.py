@@ -13,16 +13,24 @@ from app.learning.spaced_repetition import SRCard, calculate_next
 def create_session(db: Session, user_id: int, dto: CreateSessionRequest) -> dict:
     find_set(db, dto.set_id, user_id)  # ownership check
 
-    due_cards = find_due_cards(db, dto.set_id, dto.card_count)
-
-    if len(due_cards) < dto.card_count:
-        remaining = dto.card_count - len(due_cards)
-        due_ids = {c.id for c in due_cards}
-        oldest = find_oldest_cards(db, dto.set_id, dto.card_count)
-        filler = [c for c in oldest if c.id not in due_ids][:remaining]
-        cards = due_cards + filler
+    if dto.card_count is None:
+        # All cards in the set: due first, then the rest
+        cards = (
+            db.query(models.Flashcard)
+            .filter(models.Flashcard.set_id == dto.set_id)
+            .order_by(models.Flashcard.next_review_at.asc())
+            .all()
+        )
     else:
-        cards = due_cards
+        due_cards = find_due_cards(db, dto.set_id, dto.card_count)
+        if len(due_cards) < dto.card_count:
+            remaining = dto.card_count - len(due_cards)
+            due_ids = {c.id for c in due_cards}
+            oldest = find_oldest_cards(db, dto.set_id, dto.card_count)
+            filler = [c for c in oldest if c.id not in due_ids][:remaining]
+            cards = due_cards + filler
+        else:
+            cards = due_cards
 
     session = models.LearningSession(
         user_id=user_id,

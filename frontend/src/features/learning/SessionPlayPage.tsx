@@ -80,11 +80,7 @@ export function SessionPlayPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
-  if (!cards.length || isCompleting) {
-    return <div className="flex justify-center py-16"><Spinner size="lg" /></div>
-  }
-
-  const currentCard = cards[currentIndex]
+  const currentCard = cards[currentIndex] ?? null
 
   const examplesQuery = useQuery({
     queryKey: ['card-examples', currentCard?.id],
@@ -92,7 +88,7 @@ export function SessionPlayPage() {
     enabled: showExamples && !!currentCard,
   })
 
-  if (!currentCard) {
+  if (!cards.length || isCompleting || !currentCard) {
     return <div className="flex justify-center py-16"><Spinner size="lg" /></div>
   }
 

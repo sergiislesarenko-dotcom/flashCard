@@ -14,6 +14,7 @@ export function SessionSetupPage() {
   const setSession = useSessionStore((s) => s.actions.setSession)
 
   const [selectedSetId, setSelectedSetId] = useState<number | undefined>(presetSetId)
+  const [studyAll, setStudyAll] = useState(true)
   const [cardCount, setCardCount] = useState(20)
 
   const { data: setsData } = useQuery({
@@ -23,7 +24,7 @@ export function SessionSetupPage() {
 
   const startMutation = useMutation({
     mutationFn: () =>
-      learningApi.createSession({ setId: selectedSetId!, cardCount }),
+      learningApi.createSession({ setId: selectedSetId!, cardCount: studyAll ? undefined : cardCount }),
     onSuccess: (data) => {
       setSession(data.sessionId, data.cards)
       navigate(`/learn/session/${data.sessionId}`)
@@ -59,21 +60,29 @@ export function SessionSetupPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Cards to study: <span className="text-primary-600 font-bold">{cardCount}</span>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={studyAll}
+              onChange={(e) => setStudyAll(e.target.checked)}
+              className="accent-primary-600 w-4 h-4"
+            />
+            Study all cards
           </label>
-          <input
-            type="range"
-            min={1}
-            max={100}
-            value={cardCount}
-            onChange={(e) => setCardCount(Number(e.target.value))}
-            className="w-full accent-primary-600"
-          />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>1</span>
-            <span>100</span>
-          </div>
+          {!studyAll && (
+            <div className="mt-2">
+              <label className="block text-xs text-gray-500 mb-1">
+                Number of cards
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={cardCount}
+                onChange={(e) => setCardCount(Math.max(1, Number(e.target.value)))}
+                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          )}
         </div>
 
         <Button

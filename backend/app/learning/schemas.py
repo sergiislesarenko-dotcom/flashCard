@@ -7,13 +7,13 @@ from app.base_schema import CamelModel
 
 class CreateSessionRequest(CamelModel):
     set_id: int
-    card_count: int = 20
+    card_count: int | None = None  # None = all cards in the set
 
     @field_validator("card_count")
     @classmethod
-    def validate_count(cls, v: int) -> int:
-        if v < 1 or v > 100:
-            raise ValueError("card_count must be between 1 and 100")
+    def validate_count(cls, v: int | None) -> int | None:
+        if v is not None and v < 1:
+            raise ValueError("card_count must be at least 1")
         return v
 
 
