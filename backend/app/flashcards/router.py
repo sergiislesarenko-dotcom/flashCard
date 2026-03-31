@@ -1,6 +1,6 @@
 import base64
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -24,7 +24,7 @@ router = APIRouter()
 @router.get("/all", response_model=PaginatedCardsResponse)
 def list_all_cards(
     page: int = 1,
-    page_size: int = 25,
+    page_size: int = Query(25, alias="pageSize"),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
