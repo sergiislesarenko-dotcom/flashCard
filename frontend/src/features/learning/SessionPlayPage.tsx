@@ -125,13 +125,13 @@ export function SessionPlayPage() {
       </div>
 
       {showExamples && (
-        <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-6 text-xl">
           {examplesQuery.isLoading && <p className="text-gray-400">Loading...</p>}
           {examplesQuery.data && examplesQuery.data.length === 0 && (
             <p className="text-gray-400">No examples for this card</p>
           )}
           {examplesQuery.data && examplesQuery.data.length > 0 && (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {examplesQuery.data.map((ex) => (
                 <li key={ex.id} className="text-gray-700">{ex.text}</li>
               ))}
