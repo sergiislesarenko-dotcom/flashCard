@@ -62,6 +62,7 @@ export interface LearningSession {
 export interface SessionStartResponse {
   sessionId: number
   setId: number
+  languageCode: string
   cards: SessionCard[]
   totalCards: number
   startedAt: string

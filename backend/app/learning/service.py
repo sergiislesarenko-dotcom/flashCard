@@ -11,7 +11,7 @@ from app.learning.spaced_repetition import SRCard, calculate_next
 
 
 def create_session(db: Session, user_id: int, dto: CreateSessionRequest) -> dict:
-    find_set(db, dto.set_id, user_id)  # ownership check
+    flashcard_set = find_set(db, dto.set_id, user_id)  # ownership check
 
     if dto.card_count is None:
         # All cards in the set: due first, then the rest
@@ -44,6 +44,7 @@ def create_session(db: Session, user_id: int, dto: CreateSessionRequest) -> dict
     return {
         "session_id": session.id,
         "set_id": session.set_id,
+        "language_code": flashcard_set.language.code,
         "cards": [{"id": c.id, "front": c.front, "back": c.back} for c in cards],
         "total_cards": len(cards),
         "started_at": session.started_at,

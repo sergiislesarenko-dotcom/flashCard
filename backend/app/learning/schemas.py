@@ -26,6 +26,7 @@ class SessionCardOut(CamelModel):
 class SessionStartResponse(CamelModel):
     session_id: int    # → "sessionId"
     set_id: int        # → "setId"
+    language_code: str  # → "languageCode", e.g. "en", "ru"
     cards: list[SessionCardOut]
     total_cards: int   # → "totalCards"
     started_at: datetime  # → "startedAt"

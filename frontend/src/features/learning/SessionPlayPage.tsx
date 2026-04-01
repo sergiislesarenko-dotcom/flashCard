@@ -8,6 +8,7 @@ import { FlashCard } from './components/FlashCard'
 import { ProgressBar } from '../../components/ProgressBar'
 import { Button } from '../../components/Button'
 import { Spinner } from '../../components/Spinner'
+import { speak } from '../../utils/tts'
 
 export function SessionPlayPage() {
   const { id } = useParams<{ id: string }>()
@@ -17,9 +18,10 @@ export function SessionPlayPage() {
   const [isCompleting, setIsCompleting] = useState(false)
   const [showExamples, setShowExamples] = useState(false)
 
-  const { cards, currentIndex, actions } = useSessionStore((s) => ({
+  const { cards, currentIndex, languageCode, actions } = useSessionStore((s) => ({
     cards: s.cards,
     currentIndex: s.currentIndex,
+    languageCode: s.languageCode,
     actions: s.actions,
   }))
 
@@ -114,8 +116,15 @@ export function SessionPlayPage() {
         />
       </div>
 
-      {/* Examples toggle */}
-      <div className="flex justify-center mb-4">
+      {/* Speak + Examples toggle */}
+      <div className="flex justify-center gap-4 mb-4">
+        <button
+          onClick={() => speak(currentCard.back, 'en')}
+          className="text-sm text-primary-600 hover:text-primary-700 underline"
+          title="Speak translation"
+        >
+          🔊 Speak
+        </button>
         <button
           onClick={() => setShowExamples((v) => !v)}
           className="text-sm text-primary-600 hover:text-primary-700 underline"
@@ -133,7 +142,16 @@ export function SessionPlayPage() {
           {examplesQuery.data && examplesQuery.data.length > 0 && (
             <ul className="space-y-3">
               {examplesQuery.data.map((ex) => (
-                <li key={ex.id} className="text-gray-700">{ex.text}</li>
+                <li key={ex.id} className="flex items-start gap-2 text-gray-700">
+                  <button
+                    onClick={() => speak(ex.text, 'en')}
+                    className="mt-0.5 shrink-0 text-primary-500 hover:text-primary-700"
+                    title="Speak example"
+                  >
+                    🔊
+                  </button>
+                  {ex.text}
+                </li>
               ))}
             </ul>
           )}

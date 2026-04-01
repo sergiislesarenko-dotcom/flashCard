@@ -26,7 +26,7 @@ export function SessionSetupPage() {
     mutationFn: () =>
       learningApi.createSession({ setId: selectedSetId!, cardCount: studyAll ? undefined : cardCount }),
     onSuccess: (data) => {
-      setSession(data.sessionId, data.cards)
+      setSession(data.sessionId, data.cards, data.languageCode)
       navigate(`/learn/session/${data.sessionId}`)
     },
   })
