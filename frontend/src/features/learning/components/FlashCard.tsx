@@ -10,7 +10,7 @@ export function FlashCard({ front, back, isFlipped, onFlip }: FlashCardProps) {
     <div
       onClick={onFlip}
       style={{ perspective: '1000px' }}
-      className="w-full max-w-lg h-60 cursor-pointer select-none"
+      className="w-full max-w-lg cursor-pointer select-none"
       role="button"
       aria-label={isFlipped ? 'Card showing translation, click to flip back' : 'Card showing word, click to reveal translation'}
     >
@@ -21,7 +21,7 @@ export function FlashCard({ front, back, isFlipped, onFlip }: FlashCardProps) {
           transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
           position: 'relative',
           width: '100%',
-          height: '100%',
+          minHeight: '15rem',
         }}
       >
         {/* Front face — shows the Russian word */}
@@ -31,8 +31,18 @@ export function FlashCard({ front, back, isFlipped, onFlip }: FlashCardProps) {
                      flex flex-col items-center justify-center p-8"
         >
           <p className="text-xs uppercase tracking-widest text-gray-400 mb-3">Word</p>
-          <p className="text-4xl font-bold text-gray-900 text-center">{front}</p>
+          <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 2.25rem)' }} className="font-bold text-gray-900 text-center leading-snug">{front}</p>
           <p className="text-xs text-gray-400 mt-6">Tap to reveal translation</p>
+        </div>
+
+        {/* Back face — invisible spacer so the container grows to fit back content */}
+        <div
+          style={{ visibility: 'hidden', pointerEvents: 'none' }}
+          className="flex flex-col items-center justify-center p-8"
+          aria-hidden="true"
+        >
+          <p className="text-xs mb-3">&nbsp;</p>
+          <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 2.25rem)' }} className="font-bold text-center leading-snug">{isFlipped ? back : front}</p>
         </div>
 
         {/* Back face — shows the translation */}
@@ -45,7 +55,7 @@ export function FlashCard({ front, back, isFlipped, onFlip }: FlashCardProps) {
                      flex flex-col items-center justify-center p-8"
         >
           <p className="text-xs uppercase tracking-widest text-primary-200 mb-3">Translation</p>
-          <p className="text-4xl font-bold text-white text-center">{back}</p>
+          <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 2.25rem)' }} className="font-bold text-white text-center leading-snug">{back}</p>
         </div>
       </div>
     </div>
