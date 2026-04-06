@@ -35,6 +35,9 @@ def create_refresh_token(user_id: int) -> str:
 
 
 def _store_refresh_token(db: Session, user_id: int, raw_token: str) -> None:
+    db.query(models.RefreshToken).filter(
+        models.RefreshToken.user_id == user_id
+    ).delete()
     hashed = pwd_context.hash(raw_token)
     expires_at = datetime.utcnow() + timedelta(days=settings.jwt_refresh_expire_days)
     db_token = models.RefreshToken(user_id=user_id, token_hash=hashed, expires_at=expires_at)
